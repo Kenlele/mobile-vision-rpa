@@ -1,0 +1,27 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Swift compiled binaries
+vision/apple_vision_ocr
+
+# Virtual Environments
+venv/
+.venv/
+env/
+
+# Debug output & Screenshots
+debug_output/
+*.png
+*.jpg
+*.jpeg
+test_screen.png
+
+# Sensitive config containing API Keys
+config.ini
+
+# OS & IDE files
+.DS_Store
+.vscode/
+.idea/

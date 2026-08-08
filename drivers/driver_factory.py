@@ -1,0 +1,32 @@
+"""
+drivers/driver_factory.py
+Factory module for creating iOS and mock device driver instances.
+"""
+
+import logging
+from drivers.base_driver import BaseDriver
+from drivers.ios_driver import IOSDriver
+
+logger = logging.getLogger("DriverFactory")
+
+
+class DriverFactory:
+    """Factory class to create target device drivers."""
+
+    @staticmethod
+    def create_driver(driver_type: str = "mock", udid: str = "booted") -> BaseDriver:
+        """
+        Create driver instance based on requested type.
+        Supports 'ios' and 'mock' driver modes.
+        """
+        driver_type_lower = driver_type.lower()
+
+        if driver_type_lower == "ios":
+            logger.info(f"Initializing iOS Driver (UDID: {udid})")
+            return IOSDriver(udid=udid, mock_fallback=False)
+        elif driver_type_lower == "mock":
+            logger.info("Initializing Mock Driver (iOS Simulator fallback mode)")
+            return IOSDriver(udid="mock", mock_fallback=True)
+        else:
+            logger.warning(f"Unsupported driver type '{driver_type}'. Defaulting to Mock iOS Driver.")
+            return IOSDriver(udid="mock", mock_fallback=True)
