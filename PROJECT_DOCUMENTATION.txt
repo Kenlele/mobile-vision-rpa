@@ -8,14 +8,20 @@
 --------------------------------------------------------------------------------
 
 步驟 1：開啟與編輯設定檔 (config.ini)
-        在專案根目錄下的 `config.ini` 中填入您的 AI API Key (例如 Gemini 或 OpenAI)：
+        在專案根目錄下的 `config.ini` 中選擇您的 AI 提供者 (Gemini / OpenAI / 地端 Ollama)：
         
         [LLM]
-        provider = gemini
-        gemini_api_key = 您的_Gemini_API_Key_貼在此處
-        openai_api_key = 
+        # 選項 A: 使用地端 Ollama 視覺模型 (完全免費、免 API Key、本機執行)
+        provider = ollama
+        ollama_base_url = http://localhost:11434
+        model_name = llama3.2-vision
 
-        ※ 無須改動任何 Python 程式碼，亦無須在 Shell 設定環境變數。
+        # 選項 B: 使用雲端 Gemini 或 OpenAI
+        # provider = gemini
+        # gemini_api_key = 您的_Gemini_API_Key_貼在此處
+
+        ※ 使用地端 Ollama 時請確保已啟動 Ollama 服務 (`ollama serve`) 並下載視覺模型 (`ollama pull llama3.2-vision`)。
+
 
 步驟 2：開啟終端機並進入專案目錄
         $ cd /Users/yonglinlai/Desktop/mobile-vision-rpa

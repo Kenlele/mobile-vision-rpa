@@ -31,6 +31,16 @@ class TestFrameworkComponents(unittest.TestCase):
         self.assertEqual(plan.get("action"), "tap")
         self.assertEqual(plan.get("target_text"), "相簿")
 
+    def test_llm_planner_ollama(self):
+        """Test Ollama planner initialization and fallback when service unavailable."""
+        planner = LLMPlanner(provider="ollama", model_name="llama3.2-vision")
+        self.assertEqual(planner.provider, "ollama")
+        self.assertEqual(planner.model_name, "llama3.2-vision")
+        img = Image.new("RGB", (100, 100))
+        plan = planner.plan_next_action(img, "測試相簿")
+        self.assertIn("action", plan)
+
+
     def test_skill_manager_matching(self):
         """Test skill manager discovery and matching."""
         sm = SkillManager()

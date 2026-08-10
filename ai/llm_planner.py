@@ -18,10 +18,11 @@ logger = logging.getLogger("LLMPlanner")
 class LLMPlanner:
     """Vision LLM Client translating screenshots and task goals into structured RPA actions."""
 
-    def __init__(self, provider: str = None, api_key: str = None, model_name: str = None):
+    def __init__(self, provider: str = None, api_key: str = None, model_name: str = None, ollama_base_url: str = None):
         self.provider = provider or settings.llm.provider
         self.api_key = api_key or settings.llm.api_key
         self.model_name = model_name or settings.llm.model_name
+        self.ollama_base_url = ollama_base_url or settings.llm.ollama_base_url
 
     def plan_next_action(
         self,
@@ -32,6 +33,13 @@ class LLMPlanner:
         """
         Analyze screenshot and goal to produce structured action dict.
         """
+        if self.provider == "ollama":
+            try:
+                return self._call_ollama(image, goal, history)
+            except Exception as e:
+                logger.error(f"Ollama Vision API call failed: {e}. Falling back to mock planner.")
+                return self._mock_plan(image, goal, history)
+
         if not self.api_key or self.provider == "mock":
             logger.info("Using heuristic rule-based mock LLM Planner.")
             return self._mock_plan(image, goal, history)
@@ -46,6 +54,7 @@ class LLMPlanner:
         except Exception as e:
             logger.error(f"Vision LLM call failed: {e}. Falling back to mock planner.")
             return self._mock_plan(image, goal, history)
+
 
     def _call_gemini(self, image: Image.Image, goal: str, history: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Call Google Gemini Vision API using google-genai package."""
@@ -94,10 +103,47 @@ class LLMPlanner:
         }
 
         resp = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload, timeout=30)
-        resp.raise_for_gradual_error = resp.raise_for_status()
+        resp.raise_for_status()
         res_data = resp.json()
         raw_text = res_data["choices"][0]["message"]["content"]
         return self._parse_json_response(raw_text)
+
+    def _call_ollama(self, image: Image.Image, goal: str, history: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Call local Ollama Vision API endpoint."""
+        import base64
+        import requests
+
+        buffered = io.BytesIO()
+        image.save(buffered, format="JPEG")
+        base64_image = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+        prompt = SYSTEM_PROMPT + "\n\n" + build_user_prompt(goal, history)
+        url = f"{self.ollama_base_url.rstrip('/')}/api/chat"
+        target_model = self.model_name if self.model_name and self.model_name not in ["gemini-2.5-flash", "gpt-4o"] else "llama3.2-vision"
+
+        payload = {
+            "model": target_model,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": prompt,
+                    "images": [base64_image]
+                }
+            ],
+            "stream": False
+        }
+
+        try:
+            logger.info(f"Calling Local Ollama Vision model '{target_model}' at {url}...")
+            resp = requests.post(url, json=payload, timeout=60)
+            resp.raise_for_status()
+            res_data = resp.json()
+            raw_text = res_data.get("message", {}).get("content", "")
+            return self._parse_json_response(raw_text)
+        except Exception as e:
+            logger.error(f"Ollama Vision API error ({url}): {e}. Ensure Ollama is running ('ollama serve') and model is pulled ('ollama pull {target_model}').")
+            raise
+
 
     def _parse_json_response(self, text: str) -> Dict[str, Any]:
         """Clean markdown wrapping and parse JSON dict."""

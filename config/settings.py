@@ -38,7 +38,14 @@ def _get_api_key() -> str:
 
 
 def _get_model_name() -> str:
+    provider = _get_provider()
+    if provider == "ollama":
+        return _get_ini_value("LLM", "model_name") or os.getenv("LLM_MODEL", "llama3.2-vision")
     return _get_ini_value("LLM", "model_name") or os.getenv("LLM_MODEL", "gemini-2.5-flash")
+
+
+def _get_ollama_url() -> str:
+    return _get_ini_value("LLM", "ollama_base_url") or os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 
 
 class LLMSettings(BaseModel):
@@ -46,8 +53,10 @@ class LLMSettings(BaseModel):
     provider: str = Field(default_factory=_get_provider)
     api_key: str = Field(default_factory=_get_api_key)
     model_name: str = Field(default_factory=_get_model_name)
+    ollama_base_url: str = Field(default_factory=_get_ollama_url)
     temperature: float = 0.1
     max_tokens: int = 1000
+
 
 
 class DriverSettings(BaseModel):
