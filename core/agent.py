@@ -11,8 +11,6 @@ from PIL import Image
 
 from drivers.base_driver import BaseDriver
 from vision.ocr_engine import OCREngine
-from vision.color_detector import ColorDetector
-from vision.style_detector import StyleDetector
 from vision.screen_verifier import ScreenVerifier
 from ai.llm_planner import LLMPlanner
 from core.skill_manager import SkillManager
@@ -28,21 +26,18 @@ class RPAAgent:
         self,
         driver: BaseDriver,
         ocr_engine: Optional[OCREngine] = None,
-        color_detector: Optional[ColorDetector] = None,
-        style_detector: Optional[StyleDetector] = None,
         llm_planner: Optional[LLMPlanner] = None,
         skill_manager: Optional[SkillManager] = None
     ):
         self.driver = driver
         self.ocr = ocr_engine or OCREngine()
-        self.color_detector = color_detector or ColorDetector()
-        self.style_detector = style_detector or StyleDetector()
         self.planner = llm_planner or LLMPlanner()
         self.skill_manager = skill_manager or SkillManager()
         self.history: List[Dict[str, Any]] = []
 
         # Ensure output debug directory exists
         os.makedirs(settings.output_dir, exist_ok=True)
+
 
     def run(self, goal: str, max_steps: int = 5) -> Dict[str, Any]:
         """Execute RPA task goal loop with Skill Engine matching and dynamic AI Vision fallback."""

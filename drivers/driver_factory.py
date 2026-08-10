@@ -24,9 +24,10 @@ class DriverFactory:
         if driver_type_lower == "ios":
             logger.info(f"Initializing iOS Driver (UDID: {udid})")
             return IOSDriver(udid=udid, mock_fallback=False)
-        elif driver_type_lower == "mock":
-            logger.info("Initializing Mock Driver (iOS Simulator fallback mode)")
-            return IOSDriver(udid="mock", mock_fallback=True)
-        else:
+
+        if driver_type_lower != "mock":
             logger.warning(f"Unsupported driver type '{driver_type}'. Defaulting to Mock iOS Driver.")
-            return IOSDriver(udid="mock", mock_fallback=True)
+
+        logger.info("Initializing Mock Driver (iOS Simulator fallback mode)")
+        return IOSDriver(udid="mock", mock_fallback=True)
+

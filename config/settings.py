@@ -5,7 +5,6 @@ Global configuration settings for Mobile Vision RPA.
 
 import os
 import configparser
-from typing import Tuple, Dict, Any
 from pydantic import BaseModel, Field
 
 
@@ -42,21 +41,6 @@ def _get_model_name() -> str:
     return _get_ini_value("LLM", "model_name") or os.getenv("LLM_MODEL", "gemini-2.5-flash")
 
 
-class ColorSettings(BaseModel):
-    """HSV Range settings for OpenCV color detection."""
-    red_lower1: Tuple[int, int, int] = (0, 50, 50)
-    red_upper1: Tuple[int, int, int] = (15, 255, 255)
-    red_lower2: Tuple[int, int, int] = (165, 50, 50)
-    red_upper2: Tuple[int, int, int] = (180, 255, 255)
-    red_ratio_threshold: float = 0.012
-
-
-class StyleSettings(BaseModel):
-    """OpenCV parameters for text style (bold) detection."""
-    bold_edge_density_threshold: float = 0.12
-    bold_stroke_width_threshold: float = 2.5
-
-
 class LLMSettings(BaseModel):
     """Vision LLM API configuration."""
     provider: str = Field(default_factory=_get_provider)
@@ -77,8 +61,6 @@ class DriverSettings(BaseModel):
 class Settings(BaseModel):
     """Global configuration wrapper."""
     ocr_confidence_threshold: float = 0.5
-    color: ColorSettings = Field(default_factory=ColorSettings)
-    style: StyleSettings = Field(default_factory=StyleSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
     driver: DriverSettings = Field(default_factory=DriverSettings)
     debug_mode: bool = True
@@ -87,3 +69,4 @@ class Settings(BaseModel):
 
 # Singleton settings instance
 settings = Settings()
+

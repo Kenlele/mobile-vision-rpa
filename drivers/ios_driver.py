@@ -11,7 +11,8 @@ import shutil
 import re
 import logging
 from typing import Tuple, Optional
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
+
 from drivers.base_driver import BaseDriver
 
 logger = logging.getLogger("iOSDriver")

@@ -110,10 +110,9 @@ class LLMPlanner:
             return {
                 "thought": "Failed to parse LLM response JSON",
                 "action": "finish",
-                "target_text": "",
-                "require_red": False,
-                "require_bold": False
+                "target_text": ""
             }
+
 
     def _mock_plan(self, image: Image.Image, goal: str, history: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Rule-based mock decision engine for offline execution and testing."""

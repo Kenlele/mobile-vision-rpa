@@ -42,10 +42,11 @@
    - 職責：全專案唯一的 CLI 入口。具備自動偵測與切換專案虛擬環境功能。
 
 3. core/skill_manager.py (Skill 自主學習與記憶引擎)
-   - 職責：比對歷史 Skill 庫。若首次執行新任務，將於成功後自動生成 JSON Skill 檔；後續遇到同類任務直接復用。
+   - 職責：比對歷史 Skill 庫。若首次執行新任務，將於成功後自動生成 Markdown SKILL.md 檔；後續遇到同類任務直接復用。
 
-4. skills_store/ (動態生成之 Skill 知識庫)
-   - 職責：存放由 AI 自動學習生成的結構化 Skill JSON 檔案，實現無寫死 (Zero Hardcoding) 測試腳本累積。
+4. skills/ (動態生成之 Skill 知識庫)
+   - 職責：存放由 AI 自動學習生成的結構化 SKILL.md 檔案，實現無寫死 (Zero Hardcoding) 測試腳本累積。
+
 
 5. core/agent.py (純 AI Vision 任務執行心臟)
    - 職責：調度 Skill 引擎與 Vision LLM 規劃器，控制「截圖 -> 決策 -> 操作 -> 斷言評判 -> 學習儲存」自動化迴圈。
@@ -87,9 +88,9 @@
                       └─────────────────────────┘      └──────────────┘
 
 1. 任務接收：輸入測試指令（如「幫我打開相簿」）。
-2. Skill 比對：SkillManager 檢索 `skills_store/`，若命中則直接執行，不耗費額外 AI 探索時間。
+2. Skill 比對：SkillManager 檢索 `skills/`，若命中則直接執行，不耗費額外 AI 探索時間。
 3. 動態探索：若為新任務，由 Vision LLM 分析畫面截圖並結合 xcrun simctl 動態尋找系統 App。
-4. 自動學習：測試成功後，系統自動將成功經驗萃取為 Skill JSON 寫入 `skills_store/` 進行持久化。
+4. 自動學習：測試成功後，系統自動將成功經驗萃取為 SKILL.md 寫入 `skills/` 進行持久化。
 5. 產出報告：最後印出包含執行步驟與狀態的 Summary Report。
 
 
@@ -98,10 +99,11 @@
 --------------------------------------------------------------------------------
 
 1. Skill 庫的版本控管 (Skill Registry in Git)
-   - 建議將 `skills_store/` 產生的 `.json` 檔案納入 Git 提交。這樣團隊成員可以直接共用 AI 自動學習出來的自動化測試案例，無需重跑探索階段。
+   - 建議將 `skills/` 產生的 `SKILL.md` 檔案納入 Git 提交。這樣團隊成員可以直接共用 AI 自動學習出來的自動化測試案例，無需重跑探索階段。
 
 2. 雙重定位與斷言機制 (Visual Locator + Self-Assertion)
-   - 現有機制透過 OCR 與色彩/樣式檢測器 (vision/ 模組) 輔助 Vision LLM。建議在關鍵步驟後加上「畫面變更斷言 (Screen Delta Check)」，確保每次點擊後畫面有實際變化。
+   - 現有機制透過 macOS Native Apple Vision OCR 與 Screen Delta 變更檢測器 (vision/ 模組) 輔助 Vision LLM。
+
 
 3. 多裝置並行測試支援 (Multi-device Support)
    - 目前 `config.ini` 設定 `udid = booted` 可控單一模擬器。未來可透過擴充 `--udid` 參數，實現多台模擬器（如 iPhone 15 Pro, iPad Air）同時並行跑測試。
