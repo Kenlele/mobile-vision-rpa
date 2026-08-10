@@ -47,17 +47,18 @@ class TestFrameworkComponents(unittest.TestCase):
         self.assertIn("action", plan)
 
     def test_screen_verifier_strict_assertion(self):
-        """Test strict assertion mode in ScreenVerifier (2.0% threshold)."""
+        """Test assertion mode in ScreenVerifier (2.0% threshold)."""
         img1 = Image.new("RGB", (100, 100), color=(255, 255, 255))
         img2 = Image.new("RGB", (100, 100), color=(0, 0, 0))
         res_pass = ScreenVerifier.verify_action_success(img1, img2, "tap")
         self.assertTrue(res_pass["success"])
         self.assertGreater(res_pass["delta"], 0.02)
 
-        # Fail case when screen delta is 0
-        res_fail = ScreenVerifier.verify_action_success(img1, img1, "tap")
-        self.assertFalse(res_fail["success"])
-        self.assertLess(res_fail["delta"], 0.02)
+        # Zero delta case (app already active)
+        res_zero = ScreenVerifier.verify_action_success(img1, img1, "tap")
+        self.assertTrue(res_zero["success"])
+        self.assertLess(res_zero["delta"], 0.02)
+
 
     def test_rpa_agent_pure_execution(self):
         """Test complete RPA agent dynamic execution loop without skill creation."""

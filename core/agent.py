@@ -222,10 +222,17 @@ class RPAAgent:
         else:
             return {"success": False, "error": f"Unknown action type '{action_type}'"}
 
-        # Verify action success via post-action screenshot & Screen Delta
-        time.sleep(0.5)
-        img_after = self.driver.screenshot()
-        verification = ScreenVerifier.verify_action_success(screenshot, img_after, action_type, target_text)
+        # Verify action success via post-action screenshot & Screen Delta with stability polling (up to 2.5s)
+        img_after = screenshot
+        verification = {"success": False, "delta": 0.0, "reason": "No UI transition"}
+
+        for _ in range(5):
+            time.sleep(0.5)
+            img_after = self.driver.screenshot()
+            verification = ScreenVerifier.verify_action_success(screenshot, img_after, action_type, target_text)
+            if verification.get("success", False):
+                break
+
 
         return {
             "success": status and verification.get("success", True),
