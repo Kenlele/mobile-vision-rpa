@@ -102,18 +102,33 @@ class IOSDriver(BaseDriver):
         if not clean_target:
             return None
 
-        # Terms for dynamic matching
-        search_terms = [clean_target]
+        # Direct mappings for iOS system apps
         translation_map = {
-            "相簿": "mobileslideshow", "照片": "mobileslideshow", "相冊": "mobileslideshow",
-            "設定": "preferences", "safari": "safari", "瀏覽器": "safari",
-            "相機": "camera", "地圖": "maps", "行事曆": "mobilecal",
-            "日曆": "mobilecal", "聯絡人": "mobileaddressbook",
-            "檔案": "documentsapp", "備忘錄": "mobilenotes", "訊息": "mobilesms"
+            "相簿": "com.apple.mobileslideshow",
+            "照片": "com.apple.mobileslideshow",
+            "相冊": "com.apple.mobileslideshow",
+            "photos": "com.apple.mobileslideshow",
+            "設定": "com.apple.Preferences",
+            "settings": "com.apple.Preferences",
+            "safari": "com.apple.mobilesafari",
+            "瀏覽器": "com.apple.mobilesafari",
+            "相機": "com.apple.camera",
+            "camera": "com.apple.camera",
+            "地圖": "com.apple.Maps",
+            "maps": "com.apple.Maps",
+            "行事曆": "com.apple.mobilecal",
+            "日曆": "com.apple.mobilecal",
+            "備忘錄": "com.apple.mobilenotes",
+            "notes": "com.apple.mobilenotes",
+            "訊息": "com.apple.MobileSMS",
+            "messages": "com.apple.MobileSMS",
+            "檔案": "com.apple.DocumentsApp",
+            "files": "com.apple.DocumentsApp",
         }
+
         for k, v in translation_map.items():
             if k in clean_target:
-                search_terms.append(v)
+                return v
 
         try:
             res = subprocess.run(["xcrun", "simctl", "listapps", self.udid],
@@ -122,14 +137,17 @@ class IOSDriver(BaseDriver):
                 raw = res.stdout
                 app_blocks = raw.split("\n    \"")
                 for block in app_blocks:
-                    for term in search_terms:
-                        if term in block.lower():
-                            match = re.search(r'CFBundleIdentifier\s*=\s*"?([a-zA-Z0-9\._\-]+)"?;', block)
-                            if match:
-                                return match.group(1)
+                    match_id = re.search(r'CFBundleIdentifier\s*=\s*"?([a-zA-Z0-9\._\-]+)"?;', block)
+                    match_name = re.search(r'CFBundleDisplayName\s*=\s*"?([^";]+)"?;', block)
+                    if match_id:
+                        bid = match_id.group(1)
+                        bname = match_name.group(1).lower() if match_name else ""
+                        if clean_target in bid.lower() or (bname and clean_target in bname):
+                            return bid
         except Exception as e:
             logger.warning(f"Dynamic bundle lookup error: {e}")
         return None
+
 
     def tap(self, x: int, y: int, target_text: str = "", bundle_id: str = None) -> bool:
         """Tap at (x, y) on iOS Simulator or launch target app dynamically."""
@@ -240,18 +258,22 @@ class IOSDriver(BaseDriver):
         draw.text((60, 60), "iOS App Dashboard", fill=(255, 255, 255))
 
         # Card 1: Normal text button
-        draw.rectangle([60, 300, self.width - 60, 500], fill=(255, 255, 255), outline=(220, 225, 230), width=3)
-        draw.text((100, 380), "Settings", fill=(50, 50, 50))
+        draw.rectangle([60, 250, self.width - 60, 420], fill=(255, 255, 255), outline=(220, 225, 230), width=3)
+        draw.text((100, 310), "相簿", fill=(50, 50, 50))
 
-        # Card 2: Red & Bold Submit Button
-        draw.rectangle([60, 600, self.width - 60, 800], fill=(255, 255, 255), outline=(220, 225, 230), width=3)
-        # Red bold submit text simulation
-        draw.text((100, 680), "Submit Payment", fill=(220, 38, 38))
-        draw.text((101, 680), "Submit Payment", fill=(220, 38, 38))  # Duplicate shift for simulated bold
-        draw.text((100, 681), "Submit Payment", fill=(220, 38, 38))
+        # Card 2: Settings button
+        draw.rectangle([60, 460, self.width - 60, 630], fill=(255, 255, 255), outline=(220, 225, 230), width=3)
+        draw.text((100, 520), "Settings", fill=(50, 50, 50))
 
-        # Card 3: Normal Blue Button
-        draw.rectangle([60, 900, self.width - 60, 1100], fill=(37, 99, 235))
-        draw.text((100, 980), "Cancel", fill=(255, 255, 255))
+        # Card 3: Red & Bold Submit Button
+        draw.rectangle([60, 670, self.width - 60, 840], fill=(255, 255, 255), outline=(220, 225, 230), width=3)
+        draw.text((100, 730), "Submit Payment", fill=(220, 38, 38))
+        draw.text((101, 730), "Submit Payment", fill=(220, 38, 38))
+        draw.text((100, 731), "Submit Payment", fill=(220, 38, 38))
+
+        # Card 4: Normal Blue Button
+        draw.rectangle([60, 880, self.width - 60, 1050], fill=(37, 99, 235))
+        draw.text((100, 940), "Cancel", fill=(255, 255, 255))
 
         return img
+
