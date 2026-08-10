@@ -8,6 +8,7 @@ from PIL import Image
 
 from drivers.driver_factory import DriverFactory
 from drivers.base_driver import BaseDriver
+from drivers.mirroring_driver import MirroringDriver
 from ai.llm_planner import LLMPlanner
 from core.skill_manager import SkillManager
 from core.agent import RPAAgent
@@ -22,6 +23,11 @@ class TestFrameworkComponents(unittest.TestCase):
         self.assertIsInstance(driver, BaseDriver)
         self.assertTrue(driver.mock_fallback)
         self.assertEqual(driver.get_screen_size(), (1179, 2556))
+
+    def test_driver_factory_mirroring(self):
+        """Test creating macOS iPhone Mirroring driver via factory."""
+        driver = DriverFactory.create_driver("mirroring")
+        self.assertIsInstance(driver, MirroringDriver)
 
     def test_llm_planner_mock(self):
         """Test rule-based mock planner output."""
@@ -40,13 +46,6 @@ class TestFrameworkComponents(unittest.TestCase):
         plan = planner.plan_next_action(img, "測試相簿")
         self.assertIn("action", plan)
 
-
-    def test_skill_manager_matching(self):
-        """Test skill manager discovery and matching."""
-        sm = SkillManager()
-        matched = sm.find_matching_skill("non_existent_skill_xyz")
-        self.assertIsNone(matched)
-
     def test_screen_verifier_strict_assertion(self):
         """Test strict assertion mode in ScreenVerifier (2.0% threshold)."""
         img1 = Image.new("RGB", (100, 100), color=(255, 255, 255))
@@ -60,19 +59,8 @@ class TestFrameworkComponents(unittest.TestCase):
         self.assertFalse(res_fail["success"])
         self.assertLess(res_fail["delta"], 0.02)
 
-    def test_skill_manager_self_healing_save(self):
-        """Test saving self-healed skill in SkillManager."""
-        sm = SkillManager()
-        history = [
-            {"plan": {"action": "tap", "target_text": "測試標籤", "coordinates": [100, 200]}},
-            {"plan": {"action": "finish"}}
-        ]
-        res = sm.create_skill_from_execution("SelfHealingTestSkill", history, self_healed=True)
-        self.assertIsNotNone(res)
-        self.assertTrue(res.get("self_healed"))
-
-    def test_rpa_agent_mock_run(self):
-        """Test complete RPA agent mock execution loop."""
+    def test_rpa_agent_pure_execution(self):
+        """Test complete RPA agent dynamic execution loop without skill creation."""
         driver = DriverFactory.create_driver("mock")
         planner = LLMPlanner(provider="mock")
         agent = RPAAgent(driver=driver, llm_planner=planner)

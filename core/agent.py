@@ -87,16 +87,13 @@ class RPAAgent:
 
             time.sleep(1)
 
-        # Step 3: Automatically generate & persist a new SKILL.md if task succeeded
-        if success:
-            self.skill_manager.create_skill_from_execution(goal, self.history)
-
         return {
             "goal": goal,
             "success": success,
             "total_steps": step,
             "history": self.history
         }
+
 
     def _execute_skill(self, skill: Dict[str, Any], goal: str) -> Dict[str, Any]:
         """Execute pre-learned SKILL.md steps directly with Self-Healing Re-Discovery fallback."""
@@ -173,9 +170,9 @@ class RPAAgent:
 
         if healing_success:
             logger.info("✨ [Self-Healing RPA] Successfully repaired task execution via AI Vision Re-Discovery!")
-            self.skill_manager.create_skill_from_execution(goal, self.history, self_healed=True)
 
         return {
+
             "goal": goal,
             "success": healing_success,
             "total_steps": step,

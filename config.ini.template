@@ -28,11 +28,12 @@ model_name = llama3.2-vision
 
 
 [DRIVER]
-# 驅動模式: ios, mock
+# 驅動模式: ios (iOS 模擬器), mirroring (macOS iPhone Mirroring 實體手機), mock (圖片模擬測試)
 driver_type = ios
 
 # iOS 模擬器 UDID 設定: booted 或指定 UDID
 udid = booted
+
 
 
 [RPA]
