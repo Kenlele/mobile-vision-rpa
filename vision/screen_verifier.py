@@ -39,21 +39,21 @@ class ScreenVerifier:
         img_after: Image.Image,
         action_type: str,
         target_text: str = "",
-        min_delta_threshold: float = 0.015
+        min_delta_threshold: float = 0.02
     ) -> dict:
         """
-        Empirically verify if action succeeded based on Screen Delta and UI transition checks.
+        Empirically verify if action succeeded based on strict Screen Delta threshold (2.0%).
         """
         delta = cls.calculate_screen_delta(img_before, img_after)
-        logger.info(f"📊 [Action Verifier] Measured Screen Delta: {delta * 100:.2f}% (Threshold: {min_delta_threshold * 100:.2f}%)")
+        logger.info(f"📊 [Action Verifier] Measured Screen Delta: {delta * 100:.2f}% (Strict Threshold: {min_delta_threshold * 100:.2f}%)")
 
         if action_type in ["tap", "swipe", "type"]:
             if delta >= min_delta_threshold:
                 logger.info(f"✅ [Verification SUCCESS] Screen UI state transitioned after action '{action_type}'.")
                 return {"success": True, "delta": delta, "reason": f"Screen UI changed ({delta*100:.1f}%)"}
             else:
-                # App launch or UI click might have maintained similar screen or already opened
-                logger.info(f"ℹ️ [Verification NOTICE] Screen delta ({delta*100:.2f}%) below threshold. Assuming success if driver executed.")
-                return {"success": True, "delta": delta, "reason": "Action executed cleanly"}
+                logger.warning(f"❌ [Verification FAILED] Screen delta ({delta*100:.2f}%) below strict threshold ({min_delta_threshold * 100:.2f}%).")
+                return {"success": False, "delta": delta, "reason": f"Screen delta ({delta*100:.2f}%) below strict threshold ({min_delta_threshold * 100:.2f}%)"}
 
         return {"success": True, "delta": delta, "reason": "Action completed"}
+

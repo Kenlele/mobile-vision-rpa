@@ -136,9 +136,9 @@ class SkillManager:
 
         return None
 
-    def create_skill_from_execution(self, goal: str, history: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    def create_skill_from_execution(self, goal: str, history: List[Dict[str, Any]], self_healed: bool = False) -> Optional[Dict[str, Any]]:
         """
-        Synthesize a formatted SKILL.md markdown file from a successful execution trajectory.
+        Synthesize or update a formatted SKILL.md markdown file from a successful execution trajectory.
         """
         if not history:
             return None
@@ -196,12 +196,14 @@ class SkillManager:
             steps_md += f"- **Coordinates**: {json.dumps(s['coordinates']) if s['coordinates'] else 'None'}\n"
             steps_md += f"- **Thought**: {s['thought']}\n\n"
 
+        status_str = " (Self-Healed)" if self_healed else ""
         md_content = f"""---
 name: {slug}
-description: Auto-generated Skill for task goal '{goal}'
+description: Auto-generated Skill for task goal '{goal}'{status_str}
 intent_keywords:
 {kw_str}
-created_at: {datetime.now().isoformat()}
+self_healed: {str(self_healed).lower()}
+updated_at: {datetime.now().isoformat()}
 ---
 
 # Skill: {goal}
@@ -214,8 +216,12 @@ created_at: {datetime.now().isoformat()}
         try:
             with open(filepath, "w", encoding="utf-8") as f:
                 f.write(md_content)
-            logger.info(f"✨ [Skill Engine] Automatically generated & saved Markdown Skill: skills/{slug}/SKILL.md")
-            return {"name": slug, "filepath": filepath, "steps": steps}
+            if self_healed:
+                logger.info(f"🔄 [Self-Healing RPA] Automatically repaired & updated Markdown Skill: skills/{slug}/SKILL.md")
+            else:
+                logger.info(f"✨ [Skill Engine] Automatically generated & saved Markdown Skill: skills/{slug}/SKILL.md")
+            return {"name": slug, "filepath": filepath, "steps": steps, "self_healed": self_healed}
         except Exception as e:
             logger.error(f"Failed to save SKILL.md file: {e}")
             return None
+

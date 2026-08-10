@@ -99,10 +99,11 @@ class RPAAgent:
         }
 
     def _execute_skill(self, skill: Dict[str, Any], goal: str) -> Dict[str, Any]:
-        """Execute pre-learned SKILL.md steps directly."""
+        """Execute pre-learned SKILL.md steps directly with Self-Healing Re-Discovery fallback."""
         logger.info(f"🚀 [Skill Engine] Reusing learned SKILL.md: '{skill.get('name')}'")
         steps = skill.get("steps", [])
         executed_steps = 0
+        skill_failed = False
 
         for s in steps:
             executed_steps += 1
@@ -121,14 +122,68 @@ class RPAAgent:
                 "result": res
             })
 
-        logger.info(f"✅ [Skill Engine] Successfully completed task using SKILL.md '{skill.get('name')}'!")
+            if not res.get("success", False):
+                logger.warning(f"⚠️ [Self-Healing RPA] SKILL.md Step {executed_steps} failed strict assertion ({res.get('error') or res.get('verification_reason')}).")
+                skill_failed = True
+                break
+
+        if not skill_failed:
+            logger.info(f"✅ [Skill Engine] Successfully completed task using SKILL.md '{skill.get('name')}'!")
+            return {
+                "goal": goal,
+                "success": True,
+                "total_steps": executed_steps,
+                "history": self.history,
+                "used_skill": skill.get("name"),
+                "self_healed": False
+            }
+
+        # Step 2: Trigger Self-Healing AI Vision Re-Discovery loop if skill step failed
+        logger.info(f"⚡ [Self-Healing RPA] Triggering AI Vision Re-Discovery loop for goal '{goal}'...")
+        step = executed_steps
+        max_steps = step + 4
+        healing_success = False
+
+        while step < max_steps:
+            step += 1
+            logger.info(f"\n--- Self-Healing Step {step}/{max_steps} ---")
+            screenshot = self.driver.screenshot()
+            self._save_debug_screenshot(screenshot, f"step_{step}_screenshot.png")
+
+            action_plan = self.planner.plan_next_action(screenshot, goal, self.history)
+            logger.info(f"AI Thought: {action_plan.get('thought')}")
+            logger.info(f"AI Decision: {action_plan.get('action')} on '{action_plan.get('target_text')}'")
+
+            action_type = action_plan.get("action", "finish").lower()
+            if action_type == "finish":
+                healing_success = True
+                break
+
+            step_result = self._execute_action(screenshot, action_plan)
+            self.history.append({
+                "step": step,
+                "plan": action_plan,
+                "result": step_result
+            })
+
+            if not step_result.get("success", False):
+                logger.warning(f"Self-Healing step {step} failed: {step_result.get('error')}")
+
+            time.sleep(1)
+
+        if healing_success:
+            logger.info("✨ [Self-Healing RPA] Successfully repaired task execution via AI Vision Re-Discovery!")
+            self.skill_manager.create_skill_from_execution(goal, self.history, self_healed=True)
+
         return {
             "goal": goal,
-            "success": True,
-            "total_steps": executed_steps,
+            "success": healing_success,
+            "total_steps": step,
             "history": self.history,
-            "used_skill": skill.get("name")
+            "used_skill": skill.get("name"),
+            "self_healed": healing_success
         }
+
 
     def _execute_action(self, screenshot: Image.Image, plan: Dict[str, Any]) -> Dict[str, Any]:
         """Execute driver action based on AI Vision decisions."""
