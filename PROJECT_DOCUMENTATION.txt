@@ -24,7 +24,8 @@
 
 
 步驟 2：開啟終端機並進入專案目錄
-        $ cd /Users/yonglinlai/Desktop/mobile-vision-rpa
+        $ cd mobile-vision-rpa
+
 
 步驟 3：直接執行測試
         方式 A (單行指定任務)：

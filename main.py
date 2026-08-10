@@ -88,13 +88,13 @@ def main():
         provider=args.provider
     )
 
-    # Case 1: Prompt provided directly via command line flag -> Execute single task and exit cleanly
+    # Case 1: Prompt provided directly via command line flag -> Execute initial task & keep session open
     if args.prompt:
         runner.execute(prompt=args.prompt, max_steps=args.max_steps)
-        print("\n[單次任務執行完成]\n")
-        return
+        print("\n[連線持續中] 任務完成！您可以繼續在下方輸入下一個測試指令。")
+        print("(輸入 'exit', 'quit', 'q', '結束' 或 '離開' 可結束程序)\n")
 
-    # Case 2: Continuous Interactive Prompt mode when no prompt argument is given
+    # Continuous Interactive Prompt mode loop (stays open until user explicitly says exit/結束)
     while True:
         try:
             prompt_input = input("👉 請輸入下一個 Prompt 指示: ").strip()
@@ -105,11 +105,12 @@ def main():
         if not prompt_input:
             continue
 
-        if prompt_input.lower() in ["exit", "quit", "q"]:
+        if prompt_input.lower() in ["exit", "quit", "q", "結束", "離開"]:
             print("👋 離開自動化測試程式。")
             break
 
         runner.execute(prompt=prompt_input, max_steps=args.max_steps)
+
 
 
 
