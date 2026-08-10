@@ -15,6 +15,64 @@ from ai.prompts import SYSTEM_PROMPT, build_user_prompt
 logger = logging.getLogger("LLMPlanner")
 
 
+def ensure_ollama_service(base_url: str = "http://127.0.0.1:11434", model_name: str = "llama3.2-vision") -> bool:
+    """Auto-detect local Ollama server status and launch 'ollama serve' in background if stopped."""
+    import requests
+    import subprocess
+    import shutil
+    import time
+
+    url = f"{base_url.rstrip('/')}/api/tags"
+
+    # 1. Check if Ollama is already running
+    active = False
+    try:
+        resp = requests.get(url, timeout=2)
+        if resp.status_code == 200:
+            logger.info(f"✅ Local Ollama service is active at {base_url}")
+            active = True
+            models = [m.get("name", "") for m in resp.json().get("models", [])]
+            if model_name and not any(model_name in m for m in models):
+                logger.warning(f"⚠️ [Ollama Model Check] Model '{model_name}' not found in installed models {models}. Run 'ollama pull {model_name}' to download.")
+            return True
+    except Exception:
+        pass
+
+    # 2. Ollama is not running -> Check if ollama CLI is on PATH
+    ollama_path = shutil.which("ollama")
+    if not ollama_path:
+        logger.warning("⚠️ 'ollama' CLI not found on PATH. Please install Ollama from https://ollama.com/")
+        return False
+
+    # 3. Auto-launch 'ollama serve' in background
+    logger.info("🚀 [Ollama Auto-Launcher] Ollama service not detected. Auto-launching 'ollama serve' in background...")
+    try:
+        subprocess.Popen(
+            [ollama_path, "serve"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True
+        )
+        # Wait up to 5 seconds for Ollama server to initialize
+        for _ in range(10):
+            time.sleep(0.5)
+            try:
+                resp = requests.get(url, timeout=1)
+                if resp.status_code == 200:
+                    logger.info("✨ [Ollama Auto-Launcher] Ollama service started successfully!")
+                    models = [m.get("name", "") for m in resp.json().get("models", [])]
+                    if model_name and not any(model_name in m for m in models):
+                        logger.warning(f"⚠️ [Ollama Model Check] Model '{model_name}' not found in installed models {models}. Run 'ollama pull {model_name}' to download.")
+                    return True
+            except Exception:
+                pass
+    except Exception as e:
+        logger.warning(f"Failed to auto-launch 'ollama serve': {e}")
+
+
+    return False
+
+
 class LLMPlanner:
     """Vision LLM Client translating screenshots and task goals into structured RPA actions."""
 
@@ -23,6 +81,10 @@ class LLMPlanner:
         self.api_key = api_key or settings.llm.api_key
         self.model_name = model_name or settings.llm.model_name
         self.ollama_base_url = ollama_base_url or settings.llm.ollama_base_url
+
+        if self.provider == "ollama":
+            ensure_ollama_service(base_url=self.ollama_base_url, model_name=self.model_name)
+
 
     def plan_next_action(
         self,
