@@ -58,8 +58,9 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Mobile Vision RPA (iOS Automation)")
     parser.add_argument("--prompt", "--goal", dest="prompt", type=str, default="",
                         help="Optional single task prompt. If omitted, starts interactive prompt mode.")
-    parser.add_argument("--driver", choices=["ios", "mirroring", "mock"], default=None,
+    parser.add_argument("--driver", choices=["ios", "mock"], default=None,
                         help="Target device driver mode (default: from config.ini)")
+
 
     parser.add_argument("--udid", type=str, default=None,
                         help="iOS Simulator UDID or 'booted' (default: from config.ini)")

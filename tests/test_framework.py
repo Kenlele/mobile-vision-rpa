@@ -8,7 +8,6 @@ from PIL import Image
 
 from drivers.driver_factory import DriverFactory
 from drivers.base_driver import BaseDriver
-from drivers.mirroring_driver import MirroringDriver
 from ai.llm_planner import LLMPlanner
 from core.skill_manager import SkillManager
 from core.agent import RPAAgent
@@ -24,10 +23,6 @@ class TestFrameworkComponents(unittest.TestCase):
         self.assertTrue(driver.mock_fallback)
         self.assertEqual(driver.get_screen_size(), (1179, 2556))
 
-    def test_driver_factory_mirroring(self):
-        """Test creating macOS iPhone Mirroring driver via factory."""
-        driver = DriverFactory.create_driver("mirroring")
-        self.assertIsInstance(driver, MirroringDriver)
 
     def test_llm_planner_mock(self):
         """Test rule-based mock planner output."""
