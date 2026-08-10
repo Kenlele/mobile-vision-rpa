@@ -4,10 +4,11 @@ Framework execution runner orchestrating driver initialization, LLM planning, ag
 """
 
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from drivers.driver_factory import DriverFactory
 from ai.llm_planner import LLMPlanner
 from core.agent import RPAAgent
+from config.settings import settings
 
 logger = logging.getLogger("FrameworkRunner")
 
@@ -17,13 +18,14 @@ class FrameworkRunner:
 
     def __init__(
         self,
-        driver_mode: str = "mock",
-        udid: str = "booted",
-        provider: str = "mock"
+        driver_mode: Optional[str] = None,
+        udid: Optional[str] = None,
+        provider: Optional[str] = None
     ):
-        self.driver_mode = driver_mode
-        self.udid = udid
-        self.provider = provider
+        self.driver_mode = driver_mode or settings.driver.driver_type or "ios"
+        self.udid = udid or settings.driver.ios_udid or "booted"
+        self.provider = provider or settings.llm.provider or "ollama"
+
 
         # 1. Initialize Driver Layer via DriverFactory
         self.driver = DriverFactory.create_driver(driver_type=self.driver_mode, udid=self.udid)

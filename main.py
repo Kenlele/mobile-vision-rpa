@@ -58,14 +58,15 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Mobile Vision RPA (iOS Automation)")
     parser.add_argument("--prompt", "--goal", dest="prompt", type=str, default="",
                         help="Optional single task prompt. If omitted, starts interactive prompt mode.")
-    parser.add_argument("--driver", choices=["ios", "mock"], default="ios",
-                        help="Target device driver mode (default: ios)")
-    parser.add_argument("--udid", type=str, default="booted",
-                        help="iOS Simulator UDID or 'booted'")
-    parser.add_argument("--max-steps", type=int, default=5,
-                        help="Maximum agent execution steps (default: 5)")
-    parser.add_argument("--provider", choices=["gemini", "openai", "ollama", "mock"], default="mock",
-                        help="Vision LLM provider (default: mock)")
+    parser.add_argument("--driver", choices=["ios", "mock"], default=None,
+                        help="Target device driver mode (default: from config.ini)")
+    parser.add_argument("--udid", type=str, default=None,
+                        help="iOS Simulator UDID or 'booted' (default: from config.ini)")
+    parser.add_argument("--max-steps", type=int, default=None,
+                        help="Maximum agent execution steps (default: from config.ini)")
+    parser.add_argument("--provider", choices=["gemini", "openai", "ollama", "mock"], default=None,
+                        help="Vision LLM provider (default: from config.ini)")
+
 
     parser.add_argument("--verbose", action="store_true",
                         help="Enable verbose debug logging")
@@ -88,9 +89,11 @@ def main():
         provider=args.provider
     )
 
+    max_steps = args.max_steps or 5
+
     # Case 1: Prompt provided directly via command line flag -> Execute initial task & keep session open
     if args.prompt:
-        runner.execute(prompt=args.prompt, max_steps=args.max_steps)
+        runner.execute(prompt=args.prompt, max_steps=max_steps)
         print("\n[連線持續中] 任務完成！您可以繼續在下方輸入下一個測試指令。")
         print("(輸入 'exit', 'quit', 'q', '結束' 或 '離開' 可結束程序)\n")
 
@@ -109,7 +112,8 @@ def main():
             print("👋 離開自動化測試程式。")
             break
 
-        runner.execute(prompt=prompt_input, max_steps=args.max_steps)
+        runner.execute(prompt=prompt_input, max_steps=max_steps)
+
 
 
 

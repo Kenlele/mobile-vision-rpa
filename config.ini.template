@@ -9,20 +9,21 @@
 # - openai: 使用 OpenAI GPT-4 Vision 多模態模型
 # - ollama: 使用 地端 Ollama Vision 視覺模型 (完全免費、免 API Key、本機執行)
 # - mock: 本機啟發式離線測試模式
-provider = gemini
+provider = ollama
 
 # 請在此貼上您的 API Key (若使用 ollama 地端模型則免填):
 gemini_api_key = 
 openai_api_key = 
 
 # 地端 Ollama 設定 (僅當 provider = ollama 時生效):
-ollama_base_url = http://localhost:11434
+ollama_base_url = http://127.0.0.1:11434
 
 # AI 模型名稱設定:
-# - Gemini 選項: gemini-2.5-flash (推薦), gemini-1.5-pro
+# - Ollama 選項: llama3.2-vision (預設推薦), qwen2-vl, llava, minicpm-v
+# - Gemini 選項: gemini-2.5-flash, gemini-1.5-pro
 # - OpenAI 選項: gpt-4o, gpt-4o-mini
-# - Ollama 選項: llama3.2-vision, qwen2-vl, llava, minicpm-v
-model_name = gemini-2.5-flash
+model_name = llama3.2-vision
+
 
 
 
