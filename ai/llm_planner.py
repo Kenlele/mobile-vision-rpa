@@ -206,6 +206,13 @@ class LLMPlanner:
                     err_msg = resp.text
                 if "not found" in err_msg.lower():
                     logger.error(f"❌ [Ollama Model Missing] Model '{target_model}' is not installed! Please run: ollama pull {target_model}")
+                elif "mllama" in err_msg.lower() or "unknown model architecture" in err_msg.lower():
+                    logger.error(
+                        f"❌ [Ollama Version Outdated] Your local Ollama version does not support the 'mllama' architecture used by '{target_model}'.\n"
+                        f"👉 Solution 1: Update Ollama via 'brew upgrade ollama' or download latest version from https://ollama.com\n"
+                        f"👉 Solution 2: Use local 'llava' model instead (run: 'ollama pull llava' and set model_name = llava in config.ini)\n"
+                        f"👉 Solution 3: Use Gemini Vision (set provider = gemini in config.ini)"
+                    )
                 else:
                     logger.error(f"❌ [Ollama API Error {resp.status_code}] {err_msg}")
                 resp.raise_for_status()
@@ -242,25 +249,25 @@ class LLMPlanner:
             f"⚠️ [Mock Planner Mode] LLM Vision service inactive. Executing rule-based heuristic step {step_count + 1} for goal: '{goal}'"
         )
 
-        # Case 1: Goal explicitly asks for clicking the first photo ("第一張照片", "點第一張", "第一個照片", etc.)
-        if any(k in goal_lower for k in ["第一張", "第一個照片", "點第一張照片", "點第一張", "選第一張"]):
+        # Photo-related goals ("相簿", "相冊", "照片", "第一張", "紅色花", "photos", etc.)
+        if any(k in goal_lower for k in ["相簿", "相冊", "照片", "photo", "image", "picture", "第一張", "紅色花"]):
             if step_count == 0:
                 return {
-                    "thought": "Mock Heuristic: User requested clicking the first photo. Step 1: Open/Focus Photos app.",
+                    "thought": "Mock Heuristic: Goal involves viewing/opening photo. Step 1: Open/Focus Photos app.",
                     "action": "tap",
                     "target_text": "相簿",
                     "coordinates": [200, 410]
                 }
             elif step_count == 1:
                 return {
-                    "thought": "Mock Heuristic: Photos app opened. Step 2: Click the first photo item in the grid at (250, 480).",
+                    "thought": "Mock Heuristic: Photos app active. Step 2: Tap target photo item in grid at (250, 480).",
                     "action": "tap",
-                    "target_text": "第一張照片",
+                    "target_text": "相片/圖片",
                     "coordinates": [250, 480]
                 }
             else:
                 return {
-                    "thought": "Mock Heuristic: First photo clicked successfully. Finish task goal.",
+                    "thought": "Mock Heuristic: Photo opened successfully. Finish task goal.",
                     "action": "finish",
                     "target_text": "",
                     "coordinates": None
