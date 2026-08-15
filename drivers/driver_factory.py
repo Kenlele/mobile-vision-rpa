@@ -25,6 +25,11 @@ class DriverFactory:
             logger.info(f"Initializing Xcode iOS Simulator Driver (UDID: {udid})")
             return IOSDriver(udid=udid, mock_fallback=False)
 
+        if driver_type_lower in ["iphone_mirror", "mirror"]:
+            from drivers.iphone_mirror_driver import IPhoneMirrorDriver
+            logger.info("Initializing macOS iPhone Mirroring Driver (Physical Device via Mirror)")
+            return IPhoneMirrorDriver(mock_fallback=False)
+
         if driver_type_lower != "mock":
             logger.warning(f"Unsupported driver type '{driver_type}'. Defaulting to Mock iOS Driver.")
 
