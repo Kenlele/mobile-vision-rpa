@@ -1,16 +1,17 @@
-# 📱 Mobile Vision RPA (iOS AI 自動化測試與 RPA 系統)
+# 📱 Mobile Vision RPA (極簡 iOS AI 自動化測試與 RPA 系統)
 
-> 🚀 **用自然語言指令直接操控 iOS 裝置！** 結合多模態 AI Vision (Gemini / OpenAI / 地端 Ollama)、Swift 本地 OCR 與 **Skill 自主學習引擎** 的企業級 iOS 自動化測試與 RPA 框架。
+> 🚀 **用自然語言指令直接操控 iOS 裝置！** 結合雲端 **Gemini Vision AI (Gemini 2.5 Flash)**、Swift 本地 OCR 與 **Skill 自主學習引擎** 的極簡高效 iOS 自動化測試與 RPA 框架。
 
 ---
 
 ## ✨ 專案亮點 (Features)
 
-* 🧠 **自然語言 AI 驅動**：不需要寫死 XPath 或座標，直接輸入「幫我打開相簿」、「點擊第一個商品」即可完成自動化操作。
+* 🧠 **自然語言 AI 視覺驅動**：不需要寫死 XPath 或座標，直接輸入「幫我打開相簿」、「點擊第一個商品」即可完成自動化操作。
+* ⚡ **極輕量與秒級響應**：採用 Google **Gemini 2.5 Flash** 視覺模型，零本機記憶體與 GPU 負擔，推論響應時間 < 0.5 秒。
 * 🚀 **Skill 自主學習與 Persistence 引擎**：
   * **首跑探索**：由 Vision AI 自動尋找按鈕並完成操作。
   * **自動儲存**：成功後自動於 `skills/` 生成結構化 `SKILL.md` 腳本。
-  * **二次執行零成本**：再次執行相同任務時直接復用 Skill 腳本，**省去 95% LLM API 費用與等待時間**！
+  * **二次執行零成本**：再次執行相同任務時直接復用 Skill 腳本，**省去 95% API 費用與等待時間**！
 * 📱 **雙驅動模式 (Dual Drivers)**：
   * **Xcode iOS Simulator (`--driver ios`)**：適合開發者與 CI/CD 測試，背景執行不佔用桌面滑鼠焦點。
   * **macOS iPhone 鏡像 (`--driver iphone_mirror`)**：支援實體 iPhone 畫面同步與真實裝置操控。
@@ -36,7 +37,7 @@ pip install -r requirements.txt
 
 ---
 
-### 步驟 2：設定 API Key (建立 `config.ini`)
+### 步驟 2：設定 Gemini API Key (建立 `config.ini`)
 
 將預設範本複製一份為 `config.ini`：
 
@@ -44,12 +45,10 @@ pip install -r requirements.txt
 cp config.ini.template config.ini
 ```
 
-編輯 `config.ini`，貼上您的 Gemini API Key (推薦極速的 `gemini-2.5-flash`)：
+編輯 `config.ini`，貼上您的 Gemini API Key：
 
 ```ini
 [LLM]
-# 推薦使用雲端 Gemini 視覺模型 (極速且免費額度高)
-provider = gemini
 gemini_api_key = 貼上您的_Gemini_API_Key_在此處
 model_name = gemini-2.5-flash
 
@@ -74,7 +73,7 @@ python main.py --prompt "幫我打開相簿"
 ```bash
 python main.py
 ```
-進入互動模式後，系統會維持與 iOS 模擬器的連線，您可以連續下達多個指令：
+進入互動模式後，系統會維持與 iOS 裝置的連線，您可以連續下達多個指令：
 ```
 👉 請輸入 Prompt 指示: 幫我打開設定
 👉 請輸入下一個 Prompt 指示: 幫我點擊 Wi-Fi
@@ -83,21 +82,12 @@ python main.py
 
 ---
 
-## 🛠️ 常用進階用法
+## 🛠️ 常用驅動切換
 
-### 1. 使用 macOS iPhone 鏡像操控「實體 iPhone」
+### 使用 macOS iPhone 鏡像操控「實體 iPhone」
 若您的 Mac 已升級至 macOS Sequoia，且開啟了「iPhone 鏡像」App：
 ```bash
 python main.py --driver iphone_mirror --prompt "幫我打開相簿"
-```
-
-### 2. 切換至地端免費 Ollama 模型 (完全免費、免 API Key)
-若您習慣完全離線運作，安裝並下載 Ollama Vision 模型後，在 `config.ini` 切換：
-```ini
-[LLM]
-provider = ollama
-ollama_base_url = http://127.0.0.1:11434
-model_name = llava  # 或 llama3.2-vision (需要最新版 Ollama 0.4+)
 ```
 
 ---
@@ -121,7 +111,7 @@ mobile-vision-rpa/
 │   ├── ocr_engine.py        # 本地 OCR 識別封裝
 │   └── screen_verifier.py   # 畫面轉場 Visual Delta 驗證器
 ├── ai/
-│   ├── llm_planner.py       # Multi-LLM 多模態視覺分析器 (Gemini / OpenAI / Ollama)
+│   ├── llm_planner.py       # Gemini Vision 視覺分析器
 │   └── prompts.py           # Pure Vision System Prompts
 └── skills/                  # 自動學習生成之 SKILL.md Persistent 知識庫
 ```
@@ -131,7 +121,7 @@ mobile-vision-rpa/
 ## 🔒 隱私與安全說明 (Security & Privacy)
 
 * `config.ini` 已自動納入 `.gitignore`，確保您的私人 API Key 絕對不會意外推送到 GitHub 上。
-* 建議在團隊協作時，透過 `export GEMINI_API_KEY="..."` 帶入金鑰，或使用專屬權限控制金鑰。
+* 建議在團隊協作時，透過 `export GEMINI_API_KEY="..."` 帶入金鑰。
 
 ---
 

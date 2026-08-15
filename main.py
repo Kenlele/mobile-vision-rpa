@@ -66,8 +66,8 @@ def parse_args():
                         help="iOS Simulator UDID or 'booted' (default: from config.ini)")
     parser.add_argument("--max-steps", type=int, default=None,
                         help="Maximum agent execution steps (default: from config.ini)")
-    parser.add_argument("--provider", choices=["gemini", "openai", "ollama", "mock"], default=None,
-                        help="Vision LLM provider (default: from config.ini)")
+    parser.add_argument("--provider", choices=["gemini", "mock"], default=None,
+                        help="Vision LLM mode: 'gemini' (default), 'mock' (offline rule test)")
 
 
     parser.add_argument("--verbose", action="store_true",

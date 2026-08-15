@@ -8,19 +8,11 @@
 --------------------------------------------------------------------------------
 
 步驟 1：開啟與編輯設定檔 (config.ini)
-        在專案根目錄下的 `config.ini` 中選擇您的 AI 提供者 (Gemini / OpenAI / 地端 Ollama)：
+        在專案根目錄下的 `config.ini` 中貼上您的 Gemini API Key：
         
         [LLM]
-        # 選項 A: 使用地端 Ollama 視覺模型 (完全免費、免 API Key、本機執行)
-        provider = ollama
-        ollama_base_url = http://localhost:11434
-        model_name = llama3.2-vision
-
-        # 選項 B: 使用雲端 Gemini 或 OpenAI
-        # provider = gemini
-        # gemini_api_key = 您的_Gemini_API_Key_貼在此處
-
-        ※ 使用地端 Ollama 時請確保已啟動 Ollama 服務 (`ollama serve`) 並下載視覺模型 (`ollama pull llama3.2-vision`)。
+        gemini_api_key = 您的_Gemini_API_Key_貼在此處
+        model_name = gemini-2.5-flash
 
 
 步驟 2：開啟終端機並進入專案目錄
@@ -35,7 +27,7 @@
         $ python main.py
         👉 請輸入 Prompt 指示: 幫我打開相簿
 
-※ 系統亮點：專案預設全自動連結您的 Xcode iOS 模擬器 (driver_type = ios)，自動啟動 macOS Xcode Simulator 模擬機裝置，絕不會連至實體手機！
+※ 系統亮點：專案預設全自動連結您的 Xcode iOS 模擬器 (driver_type = ios)，亦支援 macOS iPhone 鏡像 (`driver_type = iphone_mirror`)！
 
 
 
@@ -44,7 +36,7 @@
 --------------------------------------------------------------------------------
 
 1. config.ini (通用組態設定檔)
-   - 職責：全專案唯一的設定入口。管理 AI API Key (Gemini/OpenAI)、模型種類、驅動模式與最大執行步驟數。
+   - 職責：全專案唯一的設定入口。管理 Gemini API Key、模型種類、驅動模式與最大執行步驟數。
 
 2. main.py (互動式主程式入口點)
    - 職責：全專案唯一的 CLI 入口。具備自動偵測與切換專案虛擬環境功能。
@@ -55,25 +47,27 @@
 4. skills/ (動態生成之 Skill 知識庫)
    - 職責：存放由 AI 自動學習生成的結構化 SKILL.md 檔案，實現無寫死 (Zero Hardcoding) 測試腳本累積。
 
-
 5. core/agent.py (純 AI Vision 任務執行心臟)
    - 職責：調度 Skill 引擎與 Vision LLM 規劃器，控制「截圖 -> 決策 -> 操作 -> 斷言評判 -> 學習儲存」自動化迴圈。
 
 6. core/runner.py (框架組裝與報告生成器)
    - 職責：負責組裝各層元件並輸出結構化的測試執行報告。
 
-7. ai/llm_planner.py (Vision LLM 多模態大腦)
-   - 職責：將手機截圖與任務 Goal 送交 Vision LLM 分析，判斷畫面目標與輸出像素座標 JSON。
+7. ai/llm_planner.py (Gemini Vision LLM 大腦)
+   - 職責：將手機截圖與任務 Goal 送交 Gemini Vision 分析，判斷畫面目標與輸出像素座標 JSON。
 
-8. drivers/ios_driver.py (iOS 實體控制器)
+8. drivers/ios_driver.py (iOS 模擬器控制器)
    - 職責：自動喚醒 macOS 模擬器視窗與裝置，透過 xcrun simctl 動態搜尋 App 套件並執行原生操作。
 
-9. config/settings.py (全域設定載入器)
-   - 職責：自動優先讀取 `config.ini` 的設定，備用讀取環境變數。
+9. drivers/iphone_mirror_driver.py (macOS iPhone 鏡像實體機控制器)
+   - 職責：控制實體 iPhone 之 macOS 鏡像視窗。
+
+10. config/settings.py (全域設定載入器)
+    - 職責：自動優先讀取 `config.ini` 的設定，備用讀取環境變數。
 
 
 --------------------------------------------------------------------------------
-三、 純 AI Vision + Skill 雙引擎工作流程
+三、 極簡 AI Vision + Skill 雙引擎工作流程
 --------------------------------------------------------------------------------
 
 ┌──────────────┐      ┌─────────────────────────┐      ┌─────────────────────────┐
@@ -82,12 +76,12 @@
                                    │ (若無)                                  │
                                    ▼                                         │
                       ┌─────────────────────────┐                            │
-                      │ ⚡ 啟動 AI 視覺探索決策 │                            │
+                      │ ⚡ 啟動 Gemini 視覺探索  │                            │
                       └─────────────────────────┘                            │
                                    │                                         │
                                    ▼                                         │
                       ┌─────────────────────────┐                            │
-                      │ 執行模擬器原生 Touch/Input│ <────────────────────────┘
+                      │ 執行裝置原生 Touch/Input│ <────────────────────────┘
                       └─────────────────────────┘
                                    │
                                    ▼
@@ -95,27 +89,4 @@
                       │ ✨ 自動學習生成新 Skill │ ───> │ 產出測試報告 │
                       └─────────────────────────┘      └──────────────┘
 
-1. 任務接收：輸入測試指令（如「幫我打開相簿」）。
-2. Skill 比對：SkillManager 檢索 `skills/`，若命中則直接執行，不耗費額外 AI 探索時間。
-3. 動態探索：若為新任務，由 Vision LLM 分析畫面截圖並結合 xcrun simctl 動態尋找系統 App。
-4. 自動學習：測試成功後，系統自動將成功經驗萃取為 SKILL.md 寫入 `skills/` 進行持久化。
-5. 產出報告：最後印出包含執行步驟與狀態的 Summary Report。
-
-
---------------------------------------------------------------------------------
-四、 根據實務經驗建議與未來加強方向 (Best Practices & Future Enhancements)
---------------------------------------------------------------------------------
-
-1. Skill 庫的版本控管 (Skill Registry in Git)
-   - 建議將 `skills/` 產生的 `SKILL.md` 檔案納入 Git 提交。這樣團隊成員可以直接共用 AI 自動學習出來的自動化測試案例，無需重跑探索階段。
-
-2. 雙重定位與斷言機制 (Visual Locator + Self-Assertion)
-   - 現有機制透過 macOS Native Apple Vision OCR 與 Screen Delta 變更檢測器 (vision/ 模組) 輔助 Vision LLM。
-
-
-3. 多裝置並行測試支援 (Multi-device Support)
-   - 目前 `config.ini` 設定 `udid = booted` 可控單一模擬器。未來可透過擴充 `--udid` 參數，實現多台模擬器（如 iPhone 15 Pro, iPad Air）同時並行跑測試。
-
-4. 異常重試與自動修復 (Self-Healing RPA)
-   - 當 Skill 復用遇到 App 改版或介面位移時， Skill Engine 可自動觸發「重新探索 (Re-Discovery)」，並自動更新 `skills_store/` 中的舊 Skill 檔案。
 ================================================================================

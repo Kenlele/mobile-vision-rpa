@@ -32,11 +32,11 @@ class TestFrameworkComponents(unittest.TestCase):
         self.assertEqual(plan.get("action"), "tap")
         self.assertEqual(plan.get("target_text"), "相簿")
 
-    def test_llm_planner_ollama(self):
-        """Test Ollama planner initialization and fallback when service unavailable."""
-        planner = LLMPlanner(provider="ollama", model_name="llama3.2-vision")
-        self.assertEqual(planner.provider, "ollama")
-        self.assertEqual(planner.model_name, "llama3.2-vision")
+    def test_llm_planner_gemini(self):
+        """Test Gemini planner initialization and mock fallback when API key is unconfigured."""
+        planner = LLMPlanner(provider="gemini", model_name="gemini-2.5-flash")
+        self.assertEqual(planner.provider, "gemini")
+        self.assertEqual(planner.model_name, "gemini-2.5-flash")
         img = Image.new("RGB", (100, 100))
         plan = planner.plan_next_action(img, "測試相簿")
         self.assertIn("action", plan)

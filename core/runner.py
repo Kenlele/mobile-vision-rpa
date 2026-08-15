@@ -24,7 +24,7 @@ class FrameworkRunner:
     ):
         self.driver_mode = driver_mode or settings.driver.driver_type or "ios"
         self.udid = udid or settings.driver.ios_udid or "booted"
-        self.provider = provider or settings.llm.provider or "ollama"
+        self.provider = provider or settings.llm.provider or "gemini"
 
 
         # 1. Initialize Driver Layer via DriverFactory

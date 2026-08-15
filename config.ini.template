@@ -1,45 +1,27 @@
 # ================================================================================
-#                   Mobile Vision RPA Configuration File (config.ini)
+#                   Mobile Vision RPA 設定檔 (config.ini)
 # ================================================================================
-# 請複製此檔案為 config.ini 並填入您的 API Key。
+# 請將此檔案複製為 config.ini 並貼上您的 Gemini API Key。
 
 [LLM]
-# AI 服務提供者選項: gemini, openai, ollama, mock
-# - gemini: 使用 Google Gemini Vision 多模態模型
-# - openai: 使用 OpenAI GPT-4 Vision 多模態模型
-# - ollama: 使用 地端 Ollama Vision 視覺模型 (完全免費、免 API Key、本機執行)
-# - mock: 本機啟發式離線測試模式
-provider = gemini
-
-# 請在此貼上您的 API Key (若使用 ollama 地端模型則免填):
+# 請在此貼上您的 Google Gemini API Key:
 gemini_api_key = 
-openai_api_key = 
 
-# 地端 Ollama 設定 (僅當 provider = ollama 時生效):
-ollama_base_url = http://127.0.0.1:11434
-
-# AI 模型名稱設定:
-# - Gemini 選項: gemini-2.5-flash (極速輕量推薦), gemini-1.5-pro
-# - Ollama 選項: llama3.2-vision, llava, qwen2-vl
-# - OpenAI 選項: gpt-4o, gpt-4o-mini
+# AI 視覺模型設定 (預設推薦極速輕量的 gemini-2.5-flash，亦可填 gemini-1.5-pro):
 model_name = gemini-2.5-flash
 
 
-
-
 [DRIVER]
-# 驅動模式: ios (Xcode iOS 模擬器), iphone_mirror (實體 iPhone 經 macOS iPhone 鏡像), mock (離線模擬)
+# 驅動模式: ios (Xcode iOS 模擬器), iphone_mirror (macOS 實體 iPhone 鏡像), mock (離線模擬)
 driver_type = ios
 
-# iOS 模擬器 UDID 設定: booted 或指定 UDID
+# iOS 模擬器 UDID 設定: booted (自動選擇已開機模擬器) 或 指定 UDID
 udid = booted
 
 
-
-
 [RPA]
-# 每次任務允許的最大自動化步驟數
+# 每次任務允許的最大步驟數
 max_steps = 5
 
-# 是否開啟除錯視覺截圖儲存
+# 是否開啟除錯視覺截圖儲存 (輸出於 debug_output/ 目錄)
 debug_mode = true

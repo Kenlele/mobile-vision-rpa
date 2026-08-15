@@ -1,6 +1,6 @@
 """
 config/settings.py
-Global configuration settings for Mobile Vision RPA.
+Global configuration settings for Mobile Vision RPA (Gemini-focused).
 """
 
 import os
@@ -24,39 +24,21 @@ def _get_ini_value(section: str, key: str, fallback: str = "") -> str:
     return fallback
 
 
-def _get_provider() -> str:
-    return _get_ini_value("LLM", "provider") or os.getenv("LLM_PROVIDER", "gemini")
-
-
 def _get_api_key() -> str:
-    provider = _get_provider()
-    if provider == "openai":
-        return _get_ini_value("LLM", "openai_api_key") or os.getenv("OPENAI_API_KEY", "")
-    return (_get_ini_value("LLM", "gemini_api_key") or
-            _get_ini_value("LLM", "openai_api_key") or
-            os.getenv("GEMINI_API_KEY", os.getenv("OPENAI_API_KEY", "")))
+    return _get_ini_value("LLM", "gemini_api_key") or os.getenv("GEMINI_API_KEY", "")
 
 
 def _get_model_name() -> str:
-    provider = _get_provider()
-    if provider == "ollama":
-        return _get_ini_value("LLM", "model_name") or os.getenv("LLM_MODEL", "llama3.2-vision")
-    return _get_ini_value("LLM", "model_name") or os.getenv("LLM_MODEL", "gemini-2.5-flash")
-
-
-def _get_ollama_url() -> str:
-    return _get_ini_value("LLM", "ollama_base_url") or os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    return _get_ini_value("LLM", "model_name") or os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
 
 class LLMSettings(BaseModel):
-    """Vision LLM API configuration."""
-    provider: str = Field(default_factory=_get_provider)
+    """Gemini Vision LLM API configuration."""
+    provider: str = Field(default_factory=lambda: _get_ini_value("LLM", "provider") or "gemini")
     api_key: str = Field(default_factory=_get_api_key)
     model_name: str = Field(default_factory=_get_model_name)
-    ollama_base_url: str = Field(default_factory=_get_ollama_url)
     temperature: float = 0.1
     max_tokens: int = 1000
-
 
 
 class DriverSettings(BaseModel):
@@ -78,4 +60,3 @@ class Settings(BaseModel):
 
 # Singleton settings instance
 settings = Settings()
-
