@@ -223,11 +223,40 @@ class LLMPlanner:
 
 
     def _mock_plan(self, image: Image.Image, goal: str, history: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Rule-based mock decision engine for offline execution and testing."""
+        """Rule-based mock decision engine for offline execution, fallback, and heuristic testing."""
         goal_lower = goal.lower()
         step_count = len(history) if history else 0
 
-        if step_count >= 1:
+        logger.warning(
+            f"⚠️ [Mock Planner Mode] LLM Vision service inactive. Executing rule-based heuristic step {step_count + 1} for goal: '{goal}'"
+        )
+
+        # Case 1: Goal explicitly asks for clicking the first photo ("第一張照片", "點第一張", "第一個照片", etc.)
+        if any(k in goal_lower for k in ["第一張", "第一個照片", "點第一張照片", "點第一張", "選第一張"]):
+            if step_count == 0:
+                return {
+                    "thought": "Mock Heuristic: User requested clicking the first photo. Step 1: Open/Focus Photos app.",
+                    "action": "tap",
+                    "target_text": "相簿",
+                    "coordinates": [200, 410]
+                }
+            elif step_count == 1:
+                return {
+                    "thought": "Mock Heuristic: Photos app opened. Step 2: Click the first photo item in the grid at (250, 480).",
+                    "action": "tap",
+                    "target_text": "第一張照片",
+                    "coordinates": [250, 480]
+                }
+            else:
+                return {
+                    "thought": "Mock Heuristic: First photo clicked successfully. Finish task goal.",
+                    "action": "finish",
+                    "target_text": "",
+                    "coordinates": None
+                }
+
+        # General multi-step finish check
+        if step_count >= 2:
             return {
                 "thought": "Target UI interaction completed. Finish task goal.",
                 "action": "finish",
@@ -242,7 +271,7 @@ class LLMPlanner:
                 "target_text": "Submit Payment",
                 "coordinates": [275, 710]
             }
-        elif "photos" in goal_lower or "相簿" in goal_lower or "相冊" in goal_lower or "照片" in goal_lower:
+        elif "photos" in goal_lower or "相簿" in goal_lower or "相冊" in goal_lower:
             return {
                 "thought": "User requested opening Photos app. Identified target: '相簿'.",
                 "action": "tap",
@@ -265,9 +294,17 @@ class LLMPlanner:
                 "coordinates": [270, 430]
             }
         else:
-            return {
-                "thought": "Identified target element on screen based on user goal request.",
-                "action": "tap",
-                "target_text": "Settings",
-                "coordinates": [200, 410]
-            }
+            if step_count == 0:
+                return {
+                    "thought": "Identified target element on screen based on user goal request.",
+                    "action": "tap",
+                    "target_text": "Settings",
+                    "coordinates": [200, 410]
+                }
+            else:
+                return {
+                    "thought": "Target interaction completed.",
+                    "action": "finish",
+                    "target_text": "",
+                    "coordinates": None
+                }
