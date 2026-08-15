@@ -198,12 +198,23 @@ class LLMPlanner:
         try:
             logger.info(f"Calling Local Ollama Vision model '{target_model}' at {url}...")
             resp = requests.post(url, json=payload, timeout=60)
-            resp.raise_for_status()
+            if resp.status_code != 200:
+                err_msg = ""
+                try:
+                    err_msg = resp.json().get("error", "")
+                except Exception:
+                    err_msg = resp.text
+                if "not found" in err_msg.lower():
+                    logger.error(f"❌ [Ollama Model Missing] Model '{target_model}' is not installed! Please run: ollama pull {target_model}")
+                else:
+                    logger.error(f"❌ [Ollama API Error {resp.status_code}] {err_msg}")
+                resp.raise_for_status()
+
             res_data = resp.json()
             raw_text = res_data.get("message", {}).get("content", "")
             return self._parse_json_response(raw_text)
         except Exception as e:
-            logger.error(f"Ollama Vision API error ({url}): {e}. Ensure Ollama is running ('ollama serve') and model is pulled ('ollama pull {target_model}').")
+            logger.error(f"Ollama Vision API call failed ({url}): {e}")
             raise
 
 
