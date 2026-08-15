@@ -119,20 +119,60 @@ class LLMPlanner:
 
 
     def _call_gemini(self, image: Image.Image, goal: str, history: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Call Google Gemini Vision API using google-genai package."""
+        """Call Google Gemini Vision API using google-genai package or direct REST fallback."""
+        if not self.api_key:
+            logger.error("❌ [Gemini API Key Missing] Please set 'gemini_api_key' in config.ini or export GEMINI_API_KEY environment variable.")
+            raise ValueError("Missing Gemini API Key")
+
+        target_model = self.model_name if "gemini" in self.model_name else "gemini-2.5-flash"
+        prompt = SYSTEM_PROMPT + "\n\n" + build_user_prompt(goal, history)
+
+        # 1. Try official google-genai SDK
         try:
             from google import genai
             client = genai.Client(api_key=self.api_key)
-            prompt = SYSTEM_PROMPT + "\n\n" + build_user_prompt(goal, history)
-            
             response = client.models.generate_content(
-                model=self.model_name,
+                model=target_model,
                 contents=[image, prompt]
             )
             return self._parse_json_response(response.text)
+        except ImportError:
+            logger.info("google-genai SDK not installed. Using direct HTTP REST API for Gemini Vision.")
         except Exception as e:
-            logger.error(f"Gemini API error: {e}")
-            raise
+            logger.warning(f"google-genai SDK call failed: {e}. Retrying via direct HTTP REST API...")
+
+        # 2. Fallback to direct HTTP REST API (zero extra SDK dependency)
+        import base64
+        import requests
+
+        buffered = io.BytesIO()
+        image.save(buffered, format="JPEG")
+        base64_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{target_model}:generateContent?key={self.api_key}"
+        payload = {
+            "contents": [
+                {
+                    "parts": [
+                        {"text": prompt},
+                        {
+                            "inline_data": {
+                                "mime_type": "image/jpeg",
+                                "data": base64_image
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+        resp = requests.post(url, json=payload, timeout=30)
+        if resp.status_code != 200:
+            logger.error(f"Gemini REST API error ({resp.status_code}): {resp.text}")
+            resp.raise_for_status()
+
+        res_data = resp.json()
+        raw_text = res_data["candidates"][0]["content"]["parts"][0]["text"]
+        return self._parse_json_response(raw_text)
 
     def _call_openai(self, image: Image.Image, goal: str, history: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Call OpenAI Vision API."""
